@@ -6945,7 +6945,7 @@ else {
         <button class="plain-button" id="sourceButton" type="button">출처</button>
       </div>
       <div class="notice">
-        seomal.org 방식처럼 전체 화면 힘 기반 그래프로 표시합니다. 화살표는 <strong>개념 -> 의존하는 선수 개념</strong>입니다. 노드 크기는 진입차수에 비례합니다.
+        seomal.org 방식처럼 전체 화면 힘 기반 그래프로 표시합니다. 노드를 클릭하면 연결 관계를 고정해서 보여주고, 빈 공간을 클릭하면 해제됩니다. 화살표는 <strong>개념 -> 의존하는 선수 개념</strong>입니다. 노드 크기는 진입차수에 비례합니다.
       </div>
     </div>
   </section>
@@ -7051,6 +7051,7 @@ else {
 
     function resetStyles() {
       window.__focusedMode = false;
+      document.body.dataset.focusedNode = "";
       cy.nodes().forEach((node) => {
         node.data("focusLabelVisible", false);
         node.style({
@@ -7097,6 +7098,7 @@ else {
     function focusNode(node) {
       resetStyles();
       window.__focusedMode = true;
+      document.body.dataset.focusedNode = node.id();
       dimAll();
       cy.nodes().forEach((item) => {
         item.data("focusLabelVisible", false);
@@ -7272,25 +7274,14 @@ else {
       selection.classList.add("open");
     }
 
-    cy.on("mouseover tapstart", "node", (event) => {
-      focusNode(event.target);
-    });
-
-    cy.on("mouseout tapend", "node", () => {
-      if (!window.__pinnedNode) {
-        resetStyles();
-        computeLabelOverlapReport();
-      }
-    });
-
     cy.on("tap", "node", (event) => {
-      window.__pinnedNode = event.target.id();
+      window.__selectedNode = event.target.id();
       focusNode(event.target);
     });
 
     cy.on("tap", (event) => {
-      if (event.cy === event.target) {
-        window.__pinnedNode = "";
+      if (event.cy === event.target || event.target.isEdge?.()) {
+        window.__selectedNode = "";
         resetStyles();
         computeLabelOverlapReport();
       }
@@ -7334,7 +7325,7 @@ else {
     document.getElementById("resetButton").addEventListener("click", () => {
       document.getElementById("searchInput").value = "";
       domainSelect.value = "";
-      window.__pinnedNode = "";
+      window.__selectedNode = "";
       cy.elements().style("display", "element");
       setInitialView();
       applyNonOverlappingLabels();
