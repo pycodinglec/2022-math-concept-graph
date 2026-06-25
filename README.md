@@ -13,6 +13,7 @@
 - 예시: `분산 -> 평균`, `분산 -> 편차`
 - 노드 크기: 진입차수 기준. 큰 노드일수록 더 많은 후속 개념이 의존하는 개념입니다.
 - 보기 모드: 기존 2D 그래프와 Three.js 기반 3D 그래프를 탭으로 전환할 수 있습니다.
+- 배치 방식: 방향/단계 앵커를 약하게 둔 force-directed layout을 생성 단계에서 계산해 2D와 3D에 각각 적용합니다.
 
 ## 조작 방법
 
@@ -35,9 +36,9 @@
 3. 성취기준에 등장하거나 성취기준을 설명하는 데 필요한 수학 개념을 명사형 개념어로 정리했습니다.
 4. 개념별 선수학습 의존 관계를 인접 리스트 형태로 모델링했습니다.
 5. `개념 -> 선수 개념` 방향의 directed graph로 변환했습니다.
-6. Cytoscape.js와 cose-bilkent 레이아웃으로 seomal.org와 유사한 전체 화면 2D 그래프를 구성했습니다.
-7. 같은 인접 리스트를 Three.js 기반 3D 그래프로도 볼 수 있도록 3D 탭을 추가했습니다.
-8. 외부 파일 없이 열 수 있도록 Cytoscape.js, cose-bilkent, TinyColor, Three.js, 그래프 데이터를 모두 `index.html` 안에 inline으로 넣었습니다.
+6. 선수학습 방향과 학년/영역 앵커를 약하게 반영한 force-directed layout을 생성 단계에서 계산했습니다.
+7. 2D는 Cytoscape.js의 preset 좌표 렌더링으로, 3D는 Three.js 기반 공간 그래프로 구성했습니다.
+8. 외부 파일 없이 열 수 있도록 Cytoscape.js, TinyColor, Three.js, 그래프 데이터를 모두 `index.html` 안에 inline으로 넣었습니다.
 
 ## 구현 메모
 
