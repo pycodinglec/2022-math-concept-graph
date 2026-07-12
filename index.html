@@ -253,42 +253,94 @@
       color: #111827;
     }
 
-    .selection {
-      position: fixed;
-      left: 12px;
-      bottom: 12px;
-      z-index: 11;
-      width: min(420px, calc(100vw - 24px));
-      max-height: 34vh;
-      overflow: auto;
-      display: none;
-      background: rgba(255, 255, 255, 0.9);
-      border: 1px solid rgba(209, 213, 219, 0.9);
-      border-radius: 8px;
-      box-shadow: 0 14px 32px rgba(15, 23, 42, 0.09);
-      padding: 10px;
-      font-size: 12px;
-      line-height: 1.45;
-    }
+      .selection {
+        position: fixed;
+        left: 12px;
+        bottom: 12px;
+        z-index: 11;
+        width: min(480px, calc(100vw - 24px));
+        max-height: 40vh;
+        overflow: auto;
+        display: none;
+        background: rgba(255, 255, 255, 0.94);
+        border: 1px solid rgba(209, 213, 219, 0.9);
+        border-radius: 8px;
+        box-shadow: 0 14px 32px rgba(15, 23, 42, 0.09);
+        padding: 12px;
+        font-size: 14px;
+        line-height: 1.52;
+      }
 
-    .selection.open {
-      display: block;
-    }
+      .selection.open {
+        display: block;
+      }
 
-    .selection h2 {
-      margin: 0 0 6px;
-      font-size: 16px;
-      line-height: 1.25;
-    }
+      .selection.fullscreen {
+        inset: 24px;
+        width: auto;
+        max-height: none;
+        z-index: 18;
+        padding: 18px;
+        font-size: 15px;
+        line-height: 1.58;
+        background: rgba(255, 255, 255, 0.98);
+        box-shadow: 0 22px 60px rgba(15, 23, 42, 0.2);
+      }
 
-    .selection ul {
-      margin: 4px 0 8px;
-      padding-left: 17px;
-    }
+      .selection-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 8px;
+      }
 
-    .selection p {
-      margin: 4px 0;
-    }
+      .selection-actions {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        gap: 6px;
+        flex: 0 0 auto;
+      }
+
+      .selection-action {
+        min-height: 30px;
+        border: 1px solid #d1d5db;
+        border-radius: 7px;
+        background: #fff;
+        color: #111827;
+        padding: 0 9px;
+        font-size: 12px;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .selection-action:hover {
+        border-color: #9ca3af;
+        background: #f9fafb;
+      }
+
+      .selection-copy-status {
+        min-height: 18px;
+        margin: 0 0 6px;
+        color: #4b5563;
+        font-size: 12px;
+      }
+
+      .selection h2 {
+        margin: 0;
+        font-size: 19px;
+        line-height: 1.25;
+      }
+
+      .selection ul {
+        margin: 5px 0 10px;
+        padding-left: 19px;
+      }
+
+      .selection p {
+        margin: 5px 0;
+      }
 
     .mobile-toolbar {
       display: none;
@@ -334,15 +386,35 @@
         grid-template-columns: repeat(2, minmax(0, 1fr));
       }
 
-      .selection {
-        left: 8px;
-        right: 8px;
-        bottom: 66px;
-        width: auto;
-        max-height: 42dvh;
-        border-radius: 12px;
-        font-size: 12px;
-      }
+        .selection {
+          left: 8px;
+          right: 8px;
+          bottom: 66px;
+          width: auto;
+          max-height: 42dvh;
+          border-radius: 12px;
+          font-size: 13px;
+        }
+
+        .selection.fullscreen {
+          inset: 8px 8px 66px;
+          max-height: none;
+          padding: 14px;
+          font-size: 14px;
+        }
+
+        .selection-head {
+          flex-direction: column;
+        }
+
+        .selection-actions {
+          width: 100%;
+          justify-content: stretch;
+        }
+
+        .selection-action {
+          flex: 1 1 0;
+        }
 
       .drawer {
         top: 8px;
@@ -1926,8 +1998,8 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         computeLabelOverlapReport();
       }
       reset3DStyles();
-      document.getElementById("selection").classList.remove("open");
-    }
+        closeSelectionPanel();
+      }
 
     function getCurrentFilterMatches() {
       const query = document.getElementById("searchInput").value.trim().toLowerCase();
@@ -2213,31 +2285,61 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       document.getElementById("tab2d").setAttribute("aria-selected", mode === "2d" ? "true" : "false");
       document.getElementById("tab3d").setAttribute("aria-selected", mode === "3d" ? "true" : "false");
       updateMobileToolbar();
-      if (mode === "3d") {
-        init3DGraph();
-        resize3DRenderer();
-        sync3DFromControls(true);
-        start3DRenderLoop();
-      } else {
-        stop3DRenderLoop();
-        cy.resize();
-        recordViewportState();
-        applyNonOverlappingLabels();
-        resetStyles();
-        computeLabelOverlapReport();
+        if (mode === "3d") {
+          init3DGraph();
+          resize3DRenderer();
+          sync3DFromControls(true);
+          if (window.__selectedNode) focus3DNode(window.__selectedNode, { sync2D: false });
+          start3DRenderLoop();
+        } else {
+          stop3DRenderLoop();
+          cy.resize();
+          recordViewportState();
+          applyNonOverlappingLabels();
+          restoreSelectedFocus({ sync3D: false });
+        }
       }
-    }
 
-    function getMaxZIndex() {
-      window.__zindex = (window.__zindex || 1) + 1;
-      return window.__zindex;
-    }
+      function getMaxZIndex() {
+        window.__zindex = (window.__zindex || 1) + 1;
+        return window.__zindex;
+      }
 
-    function resetStyles() {
-      window.__focusedMode = false;
-      document.body.dataset.focusedNode = "";
-      cy.nodes().forEach((node) => {
-        node.data("focusLabelVisible", false);
+      let currentSelectionText = "";
+
+      function escapeHtml(value) {
+        return String(value).replace(/[&<>"']/g, (char) => ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#039;",
+        }[char]));
+      }
+
+      function setSelectionFullscreen(enabled) {
+        const selection = document.getElementById("selection");
+        selection.classList.toggle("fullscreen", enabled);
+        document.body.dataset.selectionFullscreen = enabled ? "true" : "false";
+        const button = document.getElementById("selectionFullscreen");
+        if (button) {
+          button.textContent = enabled ? "축소하기" : "전체 화면에서 보기";
+          button.setAttribute("aria-pressed", enabled ? "true" : "false");
+        }
+      }
+
+      function closeSelectionPanel() {
+        const selection = document.getElementById("selection");
+        selection.classList.remove("open", "fullscreen");
+        document.body.dataset.selectionFullscreen = "false";
+        currentSelectionText = "";
+      }
+
+      function resetStyles(options = {}) {
+        window.__focusedMode = false;
+        document.body.dataset.focusedNode = "";
+        cy.nodes().forEach((node) => {
+          node.data("focusLabelVisible", false);
         node.style({
           "background-color": nodeBGColor,
           "color": fontColor,
@@ -2256,11 +2358,11 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
           "width": edgeWidth,
           "arrow-scale": arrowScale,
           "opacity": 0.9,
-          "z-index": 1,
+            "z-index": 1,
+          });
         });
-      });
-      document.getElementById("selection").classList.remove("open");
-    }
+        if (!options.keepSelectionPanel) closeSelectionPanel();
+      }
 
     function dimAll() {
       cy.nodes().forEach((node) => {
@@ -2279,10 +2381,10 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       });
     }
 
-    function focusNode(node) {
-      resetStyles();
-      window.__focusedMode = true;
-      document.body.dataset.focusedNode = node.id();
+      function focusNode(node, options = {}) {
+        resetStyles(options.preserveSelectionPanel ? { keepSelectionPanel: true } : {});
+        window.__focusedMode = true;
+        document.body.dataset.focusedNode = node.id();
       dimAll();
       cy.nodes().forEach((item) => {
         item.data("focusLabelVisible", false);
@@ -2353,9 +2455,31 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       });
       const focusCandidates = node.union(node.successors("node")).union(node.predecessors("node"));
       applyFocusedLabelCollision(node, focusCandidates);
-      renderSelection(node.id());
-      computeLabelOverlapReport();
-    }
+        renderSelection(node.id());
+        computeLabelOverlapReport();
+      }
+
+      function restoreSelectedFocus(options = {}) {
+        const selectedId = window.__selectedNode || "";
+        if (!selectedId) {
+          resetStyles();
+          if (graph3D.initialized && options.sync3D !== false) reset3DStyles();
+          computeLabelOverlapReport();
+          return false;
+        }
+        const selectedNode = cy.getElementById(selectedId);
+        const selectedVisible = selectedNode && selectedNode.length && selectedNode.style("display") !== "none";
+        if (selectedVisible) {
+          focusNode(selectedNode, { preserveSelectionPanel: true });
+          if (graph3D.initialized && options.sync3D !== false) focus3DNode(selectedId, { sync2D: false });
+          return true;
+        }
+        resetStyles({ keepSelectionPanel: true });
+        renderSelection(selectedId);
+        if (graph3D.initialized && options.sync3D !== false) reset3DStyles();
+        computeLabelOverlapReport();
+        return false;
+      }
 
     function boxesOverlap(a, b) {
       return a.x1 < b.x2 && a.x2 > b.x1 && a.y1 < b.y2 && a.y2 > b.y1;
@@ -2441,26 +2565,114 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       return accepted.length;
     }
 
-    function renderSelection(id) {
-      const item = nodeMap.get(id);
-      const deps = item.dependencies || [];
-      const next = dependents.get(id) || [];
-      const selection = document.getElementById("selection");
-      selection.innerHTML = [
-        "<h2>" + item.label + "</h2>",
-        "<p><strong>영역</strong>: " + item.domain + " · <strong>학교급/과목군</strong>: " + item.stage + "</p>",
-        "<p><strong>진입차수</strong>: " + item.indegree + " · <strong>의존 개념 수</strong>: " + item.outdegree + "</p>",
-        "<p><strong>선수 개념</strong></p>",
-        "<ul>" + (deps.length ? deps.map((dep) => "<li>" + dep + "</li>").join("") : "<li>없음</li>") + "</ul>",
-        "<p><strong>후속 개념</strong></p>",
-        "<ul>" + (next.length ? next.sort((a, b) => a.localeCompare(b, "ko")).map((dep) => "<li>" + dep + "</li>").join("") : "<li>없음</li>") + "</ul>",
-      ].join("");
-      selection.classList.add("open");
-    }
+      function getSelectionText(id) {
+        const item = nodeMap.get(id);
+        if (!item) return "";
+        const deps = item.dependencies || [];
+        const next = [...(dependents.get(id) || [])].sort((a, b) => a.localeCompare(b, "ko"));
+        return [
+          item.label,
+          "",
+          "영역: " + item.domain,
+          "학교급/과목군: " + item.stage,
+          "진입차수: " + item.indegree,
+          "의존 개념 수: " + item.outdegree,
+          "",
+          "선수 개념",
+          deps.length ? deps.map((dep) => "- " + dep).join("\n") : "- 없음",
+          "",
+          "후속 개념",
+          next.length ? next.map((dep) => "- " + dep).join("\n") : "- 없음",
+        ].join("\n");
+      }
 
-    cy.on("tap", "node", (event) => {
-      window.__selectedNode = event.target.id();
-      focusNode(event.target);
+      function renderSelection(id) {
+        const item = nodeMap.get(id);
+        if (!item) return;
+        const deps = item.dependencies || [];
+        const next = [...(dependents.get(id) || [])].sort((a, b) => a.localeCompare(b, "ko"));
+        const selection = document.getElementById("selection");
+        const wasFullscreen = selection.classList.contains("fullscreen");
+        currentSelectionText = getSelectionText(id);
+        selection.innerHTML = [
+          '<div class="selection-head">',
+          "<h2>" + escapeHtml(item.label) + "</h2>",
+          '<div class="selection-actions">',
+          '<button class="selection-action" id="selectionFullscreen" type="button" aria-pressed="' + (wasFullscreen ? "true" : "false") + '">' + (wasFullscreen ? "축소하기" : "전체 화면에서 보기") + "</button>",
+          '<button class="selection-action" id="selectionCopy" type="button">클립보드에 복사</button>',
+          "</div>",
+          "</div>",
+          '<p class="selection-copy-status" id="selectionCopyStatus" role="status" aria-live="polite"></p>',
+          "<p><strong>영역</strong>: " + escapeHtml(item.domain) + " · <strong>학교급/과목군</strong>: " + escapeHtml(item.stage) + "</p>",
+          "<p><strong>진입차수</strong>: " + item.indegree + " · <strong>의존 개념 수</strong>: " + item.outdegree + "</p>",
+          "<p><strong>선수 개념</strong></p>",
+          "<ul>" + (deps.length ? deps.map((dep) => "<li>" + escapeHtml(dep) + "</li>").join("") : "<li>없음</li>") + "</ul>",
+          "<p><strong>후속 개념</strong></p>",
+          "<ul>" + (next.length ? next.map((dep) => "<li>" + escapeHtml(dep) + "</li>").join("") : "<li>없음</li>") + "</ul>",
+        ].join("");
+        selection.classList.add("open");
+        setSelectionFullscreen(wasFullscreen);
+      }
+
+      function fallbackCopyText(text) {
+        const textarea = document.createElement("textarea");
+        textarea.value = text;
+        textarea.setAttribute("readonly", "");
+        textarea.style.position = "fixed";
+        textarea.style.left = "-9999px";
+        textarea.style.top = "0";
+        document.body.appendChild(textarea);
+        textarea.focus();
+        textarea.select();
+        let copied = false;
+        try {
+          copied = document.execCommand("copy");
+        } finally {
+          textarea.remove();
+        }
+        if (!copied) throw new Error("fallback copy failed");
+      }
+
+      async function writeClipboardText(text) {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+          return;
+        }
+        fallbackCopyText(text);
+      }
+
+      async function copySelectionToClipboard() {
+        if (!currentSelectionText) return;
+        const button = document.getElementById("selectionCopy");
+        const status = document.getElementById("selectionCopyStatus");
+        const originalText = button ? button.textContent : "";
+        try {
+          await writeClipboardText(currentSelectionText);
+          if (button) button.textContent = "복사됨";
+          if (status) status.textContent = "노드 정보를 클립보드에 복사했습니다.";
+          window.setTimeout(() => {
+            const currentButton = document.getElementById("selectionCopy");
+            if (currentButton) currentButton.textContent = originalText || "클립보드에 복사";
+          }, 1400);
+        } catch (error) {
+          if (status) status.textContent = "복사할 수 없습니다. 브라우저의 클립보드 권한을 확인해 주세요.";
+        }
+      }
+
+      document.getElementById("selection").addEventListener("click", (event) => {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) return;
+        if (target.id === "selectionFullscreen") {
+          setSelectionFullscreen(!document.getElementById("selection").classList.contains("fullscreen"));
+        }
+        if (target.id === "selectionCopy") {
+          copySelectionToClipboard();
+        }
+      });
+
+      cy.on("tap", "node", (event) => {
+        window.__selectedNode = event.target.id();
+        focusNode(event.target);
       focus3DNode(event.target.id(), { sync2D: false });
     });
 
@@ -2480,10 +2692,11 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       document.body.dataset.cyPanY = String(pan.y);
     }
 
-    function applySearch() {
-      const query = document.getElementById("searchInput").value.trim().toLowerCase();
-      const domain = document.getElementById("domainSelect").value;
-      const hasActiveFilter = Boolean(query || domain);
+      function applySearch() {
+        const selectedId = window.__selectedNode || "";
+        const query = document.getElementById("searchInput").value.trim().toLowerCase();
+        const domain = document.getElementById("domainSelect").value;
+        const hasActiveFilter = Boolean(query || domain);
       const matchedIds = [];
       cy.nodes().forEach((node) => {
         const matchesQuery = !query || node.data("label").toLowerCase().includes(query);
@@ -2499,12 +2712,12 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       if (hasActiveFilter && matchedIds.length && matchedIds.length < GRAPH.stats.concepts) {
         cy.fit(cy.collection(matchedIds.map((id) => cy.getElementById(id))), 70);
       }
-      apply3DVisibility(matchedIds, hasActiveFilter);
-      recordViewportState();
-      applyNonOverlappingLabels();
-      resetStyles();
-      computeLabelOverlapReport();
-    }
+        apply3DVisibility(matchedIds, hasActiveFilter);
+        recordViewportState();
+        applyNonOverlappingLabels();
+        if (selectedId) window.__selectedNode = selectedId;
+        restoreSelectedFocus();
+      }
 
     const domainSelect = document.getElementById("domainSelect");
     const searchInput = document.getElementById("searchInput");
@@ -2515,28 +2728,27 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
         focus3DToIds(Array.from(graph3D.visibleIds));
         return;
       }
-      cy.fit(undefined, 35);
-      recordViewportState();
-      applyNonOverlappingLabels();
-      resetStyles();
-      computeLabelOverlapReport();
-    }
+        cy.fit(undefined, 35);
+        recordViewportState();
+        applyNonOverlappingLabels();
+        restoreSelectedFocus();
+      }
 
     function resetCurrentView() {
       searchInput.value = "";
       domainSelect.value = "";
       window.__selectedNode = "";
       cy.elements().style("display", "element");
-      if (graph3D.initialized) {
-        graph3D.visibleIds = new Set(GRAPH.nodes.map((node) => node.id));
-        reset3DStyles();
+        if (graph3D.initialized) {
+          graph3D.visibleIds = new Set(GRAPH.nodes.map((node) => node.id));
+          reset3DStyles();
         focus3DToIds(GRAPH.nodes.map((node) => node.id));
       }
-      setInitialView();
-      applyNonOverlappingLabels();
-      resetStyles();
-      computeLabelOverlapReport();
-    }
+        setInitialView();
+        applyNonOverlappingLabels();
+        resetStyles();
+        computeLabelOverlapReport();
+      }
 
     function openSearchPanel() {
       const hud = document.getElementById("hud");
@@ -2598,10 +2810,11 @@ function(t,e){"object"==typeof exports&&"undefined"!=typeof module?e(exports):"f
       const params = new URLSearchParams(location.search);
       const id = params.get("i");
       if (!id) return;
-      const node = cy.getElementById(id);
-      if (node && node.length) {
-        focusNode(node);
-        cy.center(node);
+        const node = cy.getElementById(id);
+        if (node && node.length) {
+          window.__selectedNode = id;
+          focusNode(node);
+          cy.center(node);
         cy.zoom({ level: Math.max(cy.zoom(), 1.1), renderedPosition: { x: window.innerWidth / 2, y: window.innerHeight / 2 } });
         recordViewportState();
       }
